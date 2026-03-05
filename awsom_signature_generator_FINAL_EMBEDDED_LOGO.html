@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AWSOM Email Signature Generator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #2c2c2c;
+      margin-bottom: 10px;
+    }
+    .subtitle {
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+    .note {
+      background-color: #fff3cd;
+      padding: 15px;
+      border-left: 4px solid #ffc107;
+      margin-bottom: 20px;
+      font-size: 13px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+      color: #333;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+    .optional-hint {
+      font-weight: normal;
+      color: #666;
+      font-size: 12px;
+      margin-left: 6px;
+    }
+    .btn {
+      background-color: #2c2c2c;
+      color: white;
+      padding: 12px 30px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-right: 10px;
+      margin-top: 10px;
+    }
+    .btn:hover {
+      background-color: #404040;
+    }
+    .btn-secondary {
+      background-color: #6c757d;
+    }
+    .btn-secondary:hover {
+      background-color: #5a6268;
+    }
+    #preview {
+      margin-top: 30px;
+      padding: 20px;
+      background-color: #f9f9f9;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      display: none;
+    }
+    #signatureOutput {
+      background: white;
+      padding: 20px;
+    }
+    .success-message {
+      background-color: #d4edda;
+      color: #155724;
+      padding: 10px;
+      border-radius: 4px;
+      margin-top: 10px;
+      display: none;
+    }
+    .error-message {
+      background-color: #f8d7da;
+      color: #721c24;
+      padding: 10px;
+      border-radius: 4px;
+      margin-top: 10px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>AWSOM Email Signature Generator</h1>
+    <p class="subtitle">Official signature block generator for Alice L. Walton School of Medicine</p>
+
+    <div class="note">
+      <strong>Policy Compliance:</strong>
+      This generator creates standardized signature blocks in accordance with AWSOM policy.
+      Modifications to the generated signature are strictly prohibited.
+      <br><br>
+      <strong>Optional additions approved:</strong> Discipline and Cell Phone Number (if applicable).
+    </div>
+
+    <div class="form-group">
+      <label for="fullName">Full Name (as recognized by institution) *</label>
+      <input type="text" id="fullName" placeholder="John Doe" autocomplete="name">
+    </div>
+
+    <div class="form-group">
+      <label for="title">Academic or Professional Title *</label>
+      <input type="text" id="title" placeholder="Assistant Professor" autocomplete="organization-title">
+    </div>
+
+    <div class="form-group">
+      <label for="discipline">Discipline <span class="optional-hint">(optional)</span></label>
+      <input type="text" id="discipline" placeholder="e.g., Internal Medicine, Anatomy" autocomplete="off">
+    </div>
+
+    <div class="form-group">
+      <label for="department">Department or Division *</label>
+      <select id="department">
+        <option value="">-- Select Department --</option>
+        <option value="Medical Education">Medical Education</option>
+        <option value="Clinical Sciences">Clinical Sciences</option>
+        <option value="Basic Sciences">Basic Sciences</option>
+        <option value="Research">Research</option>
+        <option value="Administration">Administration</option>
+        <option value="Student Affairs">Student Affairs</option>
+        <option value="Information Technology">Information Technology</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="email">Institution Email Address *</label>
+      <input type="email" id="email" placeholder="john.doe@awsom.edu" autocomplete="email">
+    </div>
+
+    <div class="form-group">
+      <label for="cellPhone">Cell Phone Number <span class="optional-hint">(optional)</span></label>
+      <input type="tel" id="cellPhone" placeholder="e.g., (479) 555-1234" autocomplete="tel">
+    </div>
+
+    <button class="btn" onclick="generateSignature()">Generate Signature</button>
+    <button class="btn btn-secondary" onclick="copyToClipboard()">Copy to Clipboard</button>
+
+    <div class="success-message" id="successMessage">Signature copied to clipboard!</div>
+    <div class="error-message" id="errorMessage"></div>
+
+    <div id="preview">
+      <h2 style="margin-bottom: 15px; color: #2c2c2c;">Preview</h2>
+      <div id="signatureOutput"></div>
+    </div>
+  </div>
+
+  <script>
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    // Normalize phone number to a conservative tel: format (digits only, optional leading +)
+    function toTelHref(phone) {
+      const trimmed = (phone || '').trim();
+      if (!trimmed) return '';
+      const digits = trimmed.replace(/[^0-9+]/g, '');
+      const normalized = digits.startsWith('+') ? '+' + digits.slice(1).replace(/\+/g, '') : digits.replace(/\+/g, '');
+      return normalized;
+    }
+
+    function showError(msg) {
+      var el = document.getElementById('errorMessage');
+      el.textContent = msg;
+      el.style.display = 'block';
+      document.getElementById('successMessage').style.display = 'none';
+    }
+
+    function clearError() {
+      var el = document.getElementById('errorMessage');
+      el.textContent = '';
+      el.style.display = 'none';
+    }
+
+    function generateSignature() {
+      clearError();
+
+      var fullName = document.getElementById('fullName').value.trim();
+      var title = document.getElementById('title').value.trim();
+      var discipline = document.getElementById('discipline').value.trim();
+      var department = document.getElementById('department').value;
+      var email = document.getElementById('email').value.trim();
+      var cellPhone = document.getElementById('cellPhone').value.trim();
+
+      if (!fullName || !title || !department || !email) {
+        showError('Please fill in all required fields.');
+        return;
+      }
+
+      var institutionName = 'Alice L. Walton School of Medicine';
+      var website = 'ALWMedSchool.org';
+      var address = '1001 NE J St, Bentonville, AR 72712';
+      var accreditation = 'Founded in 2021, Alice L. Walton School of Medicine (AWSOM) is a nonprofit, four-year MD program that enhances traditional medical education with the arts, humanities, and whole health principles. AWSOM has been granted preliminary accreditation status by the Liaison Committee on Medical Education.';
+
+      // Embedded logo (data URI) so it always renders in preview and copy/paste
+      var embeddedLogoSrc = 'data:image/png;base64,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';
+
+      var fullNameEsc = escapeHtml(fullName);
+      var titleEsc = escapeHtml(title);
+      var disciplineEsc = escapeHtml(discipline);
+      var departmentEsc = escapeHtml(department);
+      var emailEsc = escapeHtml(email);
+      var cellPhoneEsc = escapeHtml(cellPhone);
+
+      var html = '<div style="font-family: Segoe UI, Tahoma, Geneva, Verdana, sans-serif; font-size: 13px; color: #2c2c2c;">';
+
+      html += '<div style="font-size: 16px; font-weight: bold; margin-bottom: 2px;">' + fullNameEsc + '</div>';
+      html += '<div style="margin-bottom: 2px;">' + titleEsc + '</div>';
+
+      if (disciplineEsc) {
+        html += '<div style="margin-bottom: 2px;">' + disciplineEsc + '</div>';
+      }
+
+      html += '<div style="margin-bottom: 2px;">' + departmentEsc + '</div>';
+      html += '<div style="font-weight: bold; margin-bottom: 10px;">' + institutionName + '</div>';
+
+      html += '<div style="margin-bottom: 2px;"><a href="mailto:' + emailEsc + '" style="color: #4472C4; text-decoration: none;">' + emailEsc + '</a></div>';
+
+      if (cellPhoneEsc) {
+        var telHref = toTelHref(cellPhoneEsc);
+        if (telHref) {
+          html += '<div style="margin-bottom: 2px;"><a href="tel:' + telHref + '" style="color: #4472C4; text-decoration: none;">' + cellPhoneEsc + '</a></div>';
+        } else {
+          html += '<div style="margin-bottom: 2px;">' + cellPhoneEsc + '</div>';
+        }
+      }
+
+      html += '<div style="margin-bottom: 2px;"><a href="https://' + website + '" style="color: #4472C4; text-decoration: none;">' + website + '</a></div>';
+      html += '<div style="margin-bottom: 12px;">' + address + '</div>';
+
+      // LOGO (embedded)
+      html += '<div style="margin: 12px 0;">' +
+              '<img src="' + embeddedLogoSrc + '" alt="AWSOM" style="max-width: 220px; display: block; height: auto;">' +
+              '</div>';
+
+      html += '<div style="font-size: 11px; font-style: italic; margin-top: 15px; padding-top: 15px; border-top: 1px solid #e0e0e0; line-height: 1.4;">' + accreditation + '</div>';
+      html += '</div>';
+
+      document.getElementById('signatureOutput').innerHTML = html;
+      document.getElementById('preview').style.display = 'block';
+      document.getElementById('preview').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    async function copyToClipboard() {
+      clearError();
+      var output = document.getElementById('signatureOutput');
+      if (!output.innerHTML.trim()) {
+        showError('Please generate a signature first.');
+        return;
+      }
+
+      try {
+        if (navigator.clipboard && window.ClipboardItem) {
+          const blob = new Blob([output.innerHTML], { type: 'text/html' });
+          const data = [new ClipboardItem({ 'text/html': blob, 'text/plain': new Blob([output.innerText], { type: 'text/plain' }) })];
+          await navigator.clipboard.write(data);
+        } else {
+          var range = document.createRange();
+          range.selectNode(output);
+          window.getSelection().removeAllRanges();
+          window.getSelection().addRange(range);
+          document.execCommand('copy');
+          window.getSelection().removeAllRanges();
+        }
+
+        var msg = document.getElementById('successMessage');
+        msg.style.display = 'block';
+        setTimeout(function() { msg.style.display = 'none'; }, 3000);
+      } catch (err) {
+        showError('Failed to copy. Please select the preview content and copy manually.');
+      }
+    }
+  </script>
+</body>
+</html>
