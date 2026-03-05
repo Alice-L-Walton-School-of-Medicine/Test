@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -106,6 +107,17 @@
       margin-top: 10px;
       display: none;
     }
+    .instructions {
+      background: #eef3f7;
+      border-left: 4px solid #0d6efd;
+      padding: 15px;
+      margin-top: 25px;
+      font-size: 13px;
+    }
+    details summary {
+      cursor: pointer;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
@@ -161,7 +173,7 @@
     </div>
 
     <button class="btn" onclick="generateSignature()">Generate Signature</button>
-    <button class="btn btn-secondary" onclick="copyToClipboard()">Copy to Clipboard</button>
+    <button class="btn btn-secondary" title="Copy the signature, then paste it into Outlook → Settings → Accounts → Signatures (New Outlook) or File → Options → Mail → Signatures (Classic Outlook)." onclick="copyToClipboard()">Copy to Clipboard</button>
 
     <div class="success-message" id="successMessage">Signature copied to clipboard!</div>
     <div class="error-message" id="errorMessage"></div>
@@ -170,6 +182,33 @@
       <h2 style="margin-bottom: 15px; color: #2c2c2c;">Preview</h2>
       <div id="signatureOutput"></div>
     </div>
+
+    <div class="instructions">
+      <details>
+        <summary>How to add this signature to Outlook</summary>
+
+        <p><strong>New Outlook (Windows)</strong></p>
+        <ol>
+          <li>Click the <strong>⚙ Settings</strong> icon in Outlook.</li>
+          <li>Go to <strong>Accounts → Signatures</strong>.</li>
+          <li>Select <strong>New signature</strong> and give it a name.</li>
+          <li>Paste the copied signature into the editor.</li>
+          <li>Click <strong>Save</strong>, then select it as the default for new messages (and replies/forwards if desired).</li>
+        </ol>
+
+        <p><strong>Classic / Legacy Outlook (Windows)</strong></p>
+        <ol>
+          <li>Open Outlook and go to <strong>File → Options → Mail → Signatures</strong>.</li>
+          <li>Click <strong>New</strong> and name the signature.</li>
+          <li>Paste the copied signature into the editor.</li>
+          <li>Set it as the default for new messages (and replies/forwards if desired).</li>
+          <li>Click <strong>OK</strong> to save.</li>
+        </ol>
+
+        <p><em>Tip:</em> If the logo does not appear immediately in the Outlook editor, click once inside the signature editor box and paste again.</p>
+      </details>
+    </div>
+
   </div>
 
   <script>
@@ -182,7 +221,6 @@
         .replace(/'/g, '&#39;');
     }
 
-    // Normalize phone number to a conservative tel: format (digits only, optional leading +)
     function toTelHref(phone) {
       const trimmed = (phone || '').trim();
       if (!trimmed) return '';
